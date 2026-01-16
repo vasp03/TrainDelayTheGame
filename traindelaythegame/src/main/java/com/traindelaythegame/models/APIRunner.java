@@ -24,7 +24,7 @@ public class APIRunner {
         for (APIEndpoint endPoint : getEndpoints) {
             app.get(endPoint.path(), ctx -> {
                 try {
-                    NaiveRateLimit.requestPerTimeUnit(ctx, 1, TimeUnit.SECONDS);
+                    NaiveRateLimit.requestPerTimeUnit(ctx, 10, TimeUnit.SECONDS);
 
                     endPoint.handle(ctx);
                 } catch (UnsupportedOperationException e) {
