@@ -22,5 +22,4 @@ public class GetSeekerMainPage extends APIEndpoint {
 
         ctx.contentType("text/html").result(landingPage);
     }
-
 }

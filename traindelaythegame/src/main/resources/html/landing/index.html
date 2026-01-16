@@ -9,9 +9,17 @@
 	</head>
 	<body>
 		<header>
-			<h1>Welcome to Movie Search</h1>
+			<h1>Traindelay: The Game</h1>
 		</header>
-		<main></main>
+		<main>
+			<!-- GAMELIST-->
+			<button class="selectGameButton" onclick="selectNewGame()">Start New Game</button>
+			<div id="nameInput">
+				<label for="playerName">Name:</label>
+				<input type="text" id="playerName" name="playerName" maxlength="20" />
+			</div>
+			<button id="startGameButton" onclick="startNewGame()">Start Game</button>
+		</main>
 		<!-- INLINE_JS -->
 	</body>
 </html>

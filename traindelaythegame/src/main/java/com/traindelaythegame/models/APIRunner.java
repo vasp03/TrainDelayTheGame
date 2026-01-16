@@ -1,7 +1,10 @@
 package com.traindelaythegame.models;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+
 import io.javalin.Javalin;
+import io.javalin.http.util.NaiveRateLimit;
 
 public class APIRunner {
     private Javalin app;
@@ -21,6 +24,8 @@ public class APIRunner {
         for (APIEndpoint endPoint : getEndpoints) {
             app.get(endPoint.path(), ctx -> {
                 try {
+                    NaiveRateLimit.requestPerTimeUnit(ctx, 1, TimeUnit.SECONDS);
+
                     endPoint.handle(ctx);
                 } catch (UnsupportedOperationException e) {
                     ctx.status(501).result("Not Implemented: " + endPoint.getClass().getSimpleName());
@@ -33,6 +38,8 @@ public class APIRunner {
         for (APIEndpoint endPoint : postEndpoints) {
             app.post(endPoint.path(), ctx -> {
                 try {
+                    NaiveRateLimit.requestPerTimeUnit(ctx, 1, TimeUnit.SECONDS);
+
                     endPoint.handle(ctx);
                 } catch (UnsupportedOperationException e) {
                     ctx.status(501).result("Not Implemented: " + endPoint.getClass().getSimpleName());
