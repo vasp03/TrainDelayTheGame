@@ -7,7 +7,9 @@
 	--black: #121212;
 }
 
-html, body, main {
+html,
+body,
+main {
 	margin: 0px;
 	padding: 0px;
 	width: 100%;
@@ -23,14 +25,56 @@ html, body, main {
 }
 
 #footer {
-    position: absolute;
-    bottom: 0;
-    width: 100vw;
-    height: 25vh;
-    background-color: var(--blue);
-    color: var(--white);
-    font-family: Arial, sans-serif;
-    z-index: 1000;
-    display: flex;
+	position: absolute;
+	bottom: 0;
+	width: 100vw;
+	height: 25vh;
+	background-color: var(--blue);
+	color: var(--white);
+	font-family: Arial, sans-serif;
+	z-index: 1000;
+	display: flex;
 }
 
+#raiseLowerFooterButton {
+	margin: auto;
+	padding: 10px 20px;
+	font-size: 16px;
+	background-color: var(--yellow);
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	height: 4vh;
+}
+
+#footerContent {
+	margin: auto;
+	text-align: center;
+	display: flex;
+
+	justify-content: space-between;
+	width: 100%;
+}
+
+#footerContent button {
+	font-size: 16px;
+	background-color: var(--orange);
+	border-radius: 5px;
+
+	width: 25vw;
+	height: 21vh;
+
+	margin-top: 4vh;
+}
+
+#footerContent button #leftButton {
+	align-self: flex-start;
+}
+
+#footerContent button #rightButton {
+	align-self: flex-end;
+}

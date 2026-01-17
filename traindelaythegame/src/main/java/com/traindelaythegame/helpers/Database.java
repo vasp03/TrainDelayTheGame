@@ -15,6 +15,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.traindelaythegame.models.Cords;
 
 public class Database {
     Gson gson = new Gson();
@@ -43,8 +44,8 @@ public class Database {
         // createCardInventoryTable();
         // createGameTable();
         // createPlayerHideTimeHistoryTable();
-        // creatGameMapTable();
-        // createMapPOATable();
+        creatGameMapTable();
+        createMapPolygonElement();
         createPublicTransportStopsTable();
     }
 
@@ -73,7 +74,33 @@ public class Database {
     }
 
     private void creatGameMapTable() {
-        throw new UnsupportedOperationException("Unimplemented method 'creatGameMapTable'");
+        String sql = "CREATE TABLE IF NOT EXISTS GameMap (\n"
+                + "	id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                + "	name TEXT NOT NULL UNIQUE\n"
+                + ");";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Failed to create GameMap table!");
+        }
+    }
+
+    private void createMapPolygonElement() {
+        String sql = "CREATE TABLE IF NOT EXISTS MapPolygonElement (\n"
+                + "	id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                + "	gameMapId INTEGER NOT NULL,\n"
+                + "	lat REAL NOT NULL,\n"
+                + "	lon REAL NOT NULL\n"
+                + ");";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Failed to create MapPOA table!");
+        }
     }
 
     private void createPublicTransportStopsTable() {
@@ -102,14 +129,10 @@ public class Database {
         }
     }
 
-    private void createMapPOATable() {
-        throw new UnsupportedOperationException("Unimplemented method 'createMapPOATable'");
-    }
-
-    // TODO: On startup load stops data to be able to filter out stops that is
-    // outside play area
-
-    public void addAllStopsToDatabase() {
+    /**
+     * Add all public transport stops from the stops.json file to the database
+     */
+    private void addAllStopsToDatabase() {
         String path = "other/stops.json";
         String sql = "INSERT OR REPLACE INTO PublicTransportStops(name, longitude, latitude, type) VALUES(?, ?, ?, ?)";
 
@@ -171,6 +194,15 @@ public class Database {
         }
     }
 
+    /**
+     * Get all public transport stops within the given latitude and longitude bounds
+     * 
+     * @param minLat
+     * @param maxLat
+     * @param minLon
+     * @param maxLon
+     * @return JsonArray of stops
+     */
     public JsonArray getStopsInBoundsAsJson(double minLat, double maxLat, double minLon,
             double maxLon) {
         List<JsonObject> stops = new ArrayList<>();
@@ -200,5 +232,97 @@ public class Database {
         }
 
         return gson.toJsonTree(stops).getAsJsonArray();
+    }
+
+    /**
+     * Add a game map with polygon points to the database
+     * 
+     * @param name
+     * @param polygonPoints
+     */
+    public void addGameMap(String name, Cords[] polygonPoints) {
+        String sql = "INSERT INTO GameMap(name) VALUES(?)";
+        int gameMapId = -1;
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, name);
+            pstmt.executeUpdate();
+
+            ResultSet rs = pstmt.getGeneratedKeys();
+            if (rs.next()) {
+                gameMapId = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Failed to add game map: " + name);
+            return;
+        }
+
+        if (gameMapId != -1) {
+            sql = "INSERT INTO MapPolygonElement(gameMapId, lat, lon) VALUES(?, ?, ?)";
+
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                connection.setAutoCommit(false);
+
+                for (Cords point : polygonPoints) {
+                    pstmt.setInt(1, gameMapId);
+                    pstmt.setDouble(2, point.getLat());
+                    pstmt.setDouble(3, point.getLon());
+                    pstmt.addBatch();
+                }
+
+                pstmt.executeBatch();
+                connection.commit();
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("Failed to add polygon points for game map: " + name);
+                return;
+            }
+        }
+    }
+
+    public Cords[] getGameMap(String name) {
+        String getMapSql = "SELECT * FROM GameMap WHERE name = ?";
+        int gameMapId = -1;
+
+        try (PreparedStatement pstmt = connection.prepareStatement(getMapSql)) {
+            pstmt.setString(1, name);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                gameMapId = rs.getInt("id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Failed to get game map: " + name);
+            return null;
+        }
+
+        // Sorted by id to maintain order
+        String getPolygonCordsSql = "SELECT * FROM MapPolygonElement WHERE gameMapId = ? ORDER BY id ASC";
+        Cords[] polygonPoints = null;
+
+        try (PreparedStatement pstmt = connection.prepareStatement(getPolygonCordsSql)) {
+            pstmt.setInt(1, gameMapId);
+            ResultSet rs = pstmt.executeQuery();
+
+            List<Cords> pointsList = new ArrayList<>();
+
+            while (rs.next()) {
+                double lat = rs.getDouble("lat");
+                double lon = rs.getDouble("lon");
+
+                pointsList.add(new Cords(lat, lon));
+            }
+
+            polygonPoints = pointsList.toArray(new Cords[0]);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Failed to get polygon points for game map: " + name);
+            return null;
+        }
+
+        return polygonPoints;
     }
 }

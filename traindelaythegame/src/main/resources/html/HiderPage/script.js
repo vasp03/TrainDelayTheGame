@@ -52,6 +52,10 @@ map.on("moveend", function (e) {
 	getPublicTransportStopsInView();
 });
 
+map.on("click", function (e) {
+	console.log("Map clicked at lat: " + e.latlng.lat + "," + e.latlng.lng + ";");
+});
+
 function getPublicTransportStopsInView() {
 	if (map.getZoom() >= 14) {
 		minLong = map.getBounds().getWest();
@@ -90,5 +94,46 @@ window.onload = function () {
 
 	if (cookies.maplat && cookies.maplon && cookies.mapzoom) {
 		map.setView([parseFloat(cookies.maplat), parseFloat(cookies.maplon)], parseInt(cookies.mapzoom));
+	}
+
+	getMapPolygonFromServer();
+};
+
+function getMapPolygonFromServer() {
+	fetch("/api/v1/playarea?map=test")
+		.then((response) => response.text())
+		.then((data) => {
+			const points = data.split(";").map((point) => {
+				const [lat, lon] = point.split(",");
+				return [parseFloat(lat), parseFloat(lon)];
+			});
+
+			var world = [
+				[-90, -180],
+				[90, -180],
+				[90, 180],
+				[-90, 180],
+			];
+
+			L.polygon([world, points], {
+				color: "red",
+				fillColor: "red",
+				fillOpacity: 0.1,
+			}).addTo(map);
+		});
+}
+
+document.getElementById("raiseLowerFooterButton").onclick = function () {
+	const footer = document.getElementById("footer");
+	if (footer.style.height === "4vh") {
+		document.getElementById("arrowUpDown").innerText = "▼";
+		footer.style.transition = "height 0.3s ease";
+		footer.style.height = "25vh";
+		document.getElementById("footerContent").style.display = "flex";
+	} else {
+		document.getElementById("arrowUpDown").innerText = "▲";
+		footer.style.transition = "height 0.3s ease";
+		footer.style.height = "4vh";
+		document.getElementById("footerContent").style.display = "none";
 	}
 };

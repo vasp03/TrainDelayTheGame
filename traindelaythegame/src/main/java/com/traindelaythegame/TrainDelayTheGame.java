@@ -42,6 +42,7 @@ public class TrainDelayTheGame {
 
         endpointsGet.add(new ImgEndpoint());
         endpointsGet.add(new BusTrainStops(this));
+        endpointsGet.add(new GetPlayArea(this));
 
         ArrayList<APIEndpoint> endpointsPost = new ArrayList<>();
         endpointsPost.add(new AnswerQuestion());
@@ -50,6 +51,7 @@ public class TrainDelayTheGame {
         endpointsPost.add(new JoinGame());
         endpointsPost.add(new Send());
         endpointsPost.add(new SetSettings());
+        endpointsPost.add(new AddGameMap(this));
 
         this.apiRunner.registerEndpoints(endpointsGet, endpointsPost);
     }
