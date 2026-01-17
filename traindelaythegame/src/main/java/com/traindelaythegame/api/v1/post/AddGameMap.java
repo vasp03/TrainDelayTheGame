@@ -1,6 +1,5 @@
 package com.traindelaythegame.api.v1.post;
 
-import com.google.gson.Gson;
 import com.traindelaythegame.TrainDelayTheGame;
 import com.traindelaythegame.helpers.Database;
 import com.traindelaythegame.models.APIEndpoint;
@@ -51,6 +50,5 @@ public class AddGameMap extends APIEndpoint {
         db.addGameMap(name, polygonPoints);
 
         ctx.status(200);
-        ctx.json("Game map added successfully.");
     }
 }

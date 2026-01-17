@@ -16,6 +16,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.traindelaythegame.models.Cords;
+import com.traindelaythegame.models.MapData;
 
 public class Database {
     Gson gson = new Gson();
@@ -282,6 +283,12 @@ public class Database {
         }
     }
 
+    /**
+     * Get the polygon points of a game map by name
+     * 
+     * @param name
+     * @return
+     */
     public Cords[] getGameMap(String name) {
         String getMapSql = "SELECT * FROM GameMap WHERE name = ?";
         int gameMapId = -1;
@@ -324,5 +331,48 @@ public class Database {
         }
 
         return polygonPoints;
+    }
+
+    /**
+     * Remove a game map by id
+     * 
+     * @param id
+     */
+    public void removeGameMap(String id) {
+        String deleteGameMap = "DELETE FROM GameMap WHERE id = ?";
+        String deletePolygonPoints = "DELETE FROM MapPolygonElement WHERE gameMapId = ?";
+
+        try (PreparedStatement pstmt1 = connection.prepareStatement(deletePolygonPoints);
+                PreparedStatement pstmt2 = connection.prepareStatement(deleteGameMap)) {
+            pstmt1.setString(1, id);
+            pstmt1.executeUpdate();
+
+            pstmt2.setString(1, id);
+            pstmt2.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Failed to remove game map with id: " + id);
+        }
+    }
+
+    public MapData[] getAllGameMaps() {
+        String sql = "SELECT * FROM GameMap";
+        ArrayList<MapData> gameMaps = new ArrayList<>();
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                String name = rs.getString("name");
+                int gameMapId = rs.getInt("id");
+
+                gameMaps.add(new MapData(name, gameMapId));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Failed to get all game maps");
+        }
+
+        return gameMaps.toArray(new MapData[0]);
     }
 }

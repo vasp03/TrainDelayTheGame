@@ -2,6 +2,7 @@ package com.traindelaythegame;
 
 import java.util.ArrayList;
 
+import com.traindelaythegame.api.v1.delete.RemoveGameMap;
 import com.traindelaythegame.api.v1.get.game.*;
 import com.traindelaythegame.api.v1.get.html.*;
 import com.traindelaythegame.api.v1.get.other.*;
@@ -39,10 +40,12 @@ public class TrainDelayTheGame {
         endpointsGet.add(new GetHiderMainPage());
         endpointsGet.add(new GetLanding());
         endpointsGet.add(new GetSeekerMainPage());
+        endpointsGet.add(new PlayAreaCreator());
 
         endpointsGet.add(new ImgEndpoint());
         endpointsGet.add(new BusTrainStops(this));
         endpointsGet.add(new GetPlayArea(this));
+        endpointsGet.add(new GetAllMaps(this));
 
         ArrayList<APIEndpoint> endpointsPost = new ArrayList<>();
         endpointsPost.add(new AnswerQuestion());
@@ -53,7 +56,10 @@ public class TrainDelayTheGame {
         endpointsPost.add(new SetSettings());
         endpointsPost.add(new AddGameMap(this));
 
-        this.apiRunner.registerEndpoints(endpointsGet, endpointsPost);
+        ArrayList<APIEndpoint> endpointsDelete = new ArrayList<>();
+        endpointsDelete.add(new RemoveGameMap(this));
+
+        this.apiRunner.registerEndpoints(endpointsGet, endpointsPost, endpointsDelete);
     }
 
     public Database getDatabase() {

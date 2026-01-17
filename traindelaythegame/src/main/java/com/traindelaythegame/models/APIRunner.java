@@ -10,14 +10,17 @@ public class APIRunner {
     private Javalin app;
     private ArrayList<APIEndpoint> getEndpoints = new ArrayList<>();
     private ArrayList<APIEndpoint> postEndpoints = new ArrayList<>();
+    private ArrayList<APIEndpoint> deleteEndpoints = new ArrayList<>();
 
     public APIRunner() {
         app = Javalin.create();
     }
 
-    public void registerEndpoints(ArrayList<APIEndpoint> getEndpoints, ArrayList<APIEndpoint> postEndpoints) {
+    public void registerEndpoints(ArrayList<APIEndpoint> getEndpoints, ArrayList<APIEndpoint> postEndpoints,
+            ArrayList<APIEndpoint> deleteEndpoints) {
         this.getEndpoints.addAll(getEndpoints);
         this.postEndpoints.addAll(postEndpoints);
+        this.deleteEndpoints.addAll(deleteEndpoints);
     }
 
     public APIRunner start() {
@@ -48,6 +51,20 @@ public class APIRunner {
         }
 
         postEndpoints.clear();
+
+        for (APIEndpoint endPoint : deleteEndpoints) {
+            app.delete(endPoint.path(), ctx -> {
+                try {
+                    NaiveRateLimit.requestPerTimeUnit(ctx, 1, TimeUnit.SECONDS);
+
+                    endPoint.handle(ctx);
+                } catch (UnsupportedOperationException e) {
+                    ctx.status(501).result("Not Implemented: " + endPoint.getClass().getSimpleName());
+                }
+            });
+        }
+
+        deleteEndpoints.clear();
 
         app.start(5000);
         return this;

@@ -50,5 +50,6 @@ public class GetPlayArea extends APIEndpoint {
 
         ctx.status(200);
         ctx.result(sb.toString());
+
     }
 }
