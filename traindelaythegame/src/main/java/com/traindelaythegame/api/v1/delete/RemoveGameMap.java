@@ -19,7 +19,7 @@ public class RemoveGameMap extends APIEndpoint {
 
     @Override
     public void handle(Context ctx) throws UnsupportedOperationException {
-        String name = ctx.queryParam("id");
+        String name = ctx.queryParam("name");
 
         if (name == null || name.isEmpty()) {
             ctx.status(400);

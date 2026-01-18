@@ -1,0 +1,29 @@
+{
+	"cards": [
+		{
+			"radar": [
+				{ "id": "1", "size": "any", "name": "500 m", "range": 500 },
+				{ "id": "2", "size": "any", "name": "1 km", "range": 1000 },
+				{ "id": "3", "size": "any", "name": "2 km", "range": 2000 },
+				{ "id": "4", "size": "any", "name": "5 km", "range": 5000 },
+				{ "id": "5", "size": "any", "name": "10 km", "range": 10000 },
+				{ "id": "6", "size": "any", "name": "15 km", "range": 15000 },
+				{ "id": "7", "size": "any", "name": "40 km", "range": 40000 },
+				{ "id": "8", "size": "any", "name": "80 km", "range": 80000 },
+				{ "id": "9", "size": "any", "name": "160 km", "range": 160000 },
+				{ "id": "10", "size": "any", "name": "custom", "range": "*" }
+			],
+			"thermometer": [
+				{ "id": "11", "size": "small", "name": "1 km", "delay": 5 },
+				{ "id": "12", "size": "small", "name": "5 km", "delay": 10 },
+				{ "id": "13", "size": "medium", "name": "15 km", "delay": 15 },
+				{ "id": "14", "size": "large", "name": "75 km", "delay": 20 }
+			],
+            "admistrative_division": [
+                { "id": "15", "size": "any", "name": "1st Län", "level": 1 },
+                { "id": "16", "size": "any", "name": "2nd Kommun", "level": 2 },
+                { "id": "17", "size": "any", "name": "3rd Ort", "level": 3 }
+            ]
+		}
+	]
+}

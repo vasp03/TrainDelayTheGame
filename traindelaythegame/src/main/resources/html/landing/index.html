@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
@@ -12,13 +12,14 @@
 			<h1>Traindelay: The Game</h1>
 		</header>
 		<main>
-			<!-- GAMELIST-->
-			<button class="selectGameButton" onclick="selectNewGame()">Start New Game</button>
 			<div id="nameInput">
 				<label for="playerName">Name:</label>
 				<input type="text" id="playerName" name="playerName" maxlength="20" />
 			</div>
-			<button id="startGameButton" onclick="startNewGame()">Start Game</button>
+			<button id="login" onclick="login()">Log In</button>
+			<button class="startNewGame" onclick="startNewGame()">Start New Game</button>
+			<h2>Join Game:</h2>
+			<div id="gameList"></div>
 		</main>
 		<!-- INLINE_JS -->
 	</body>

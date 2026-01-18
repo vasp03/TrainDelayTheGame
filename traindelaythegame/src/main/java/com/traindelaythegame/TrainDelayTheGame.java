@@ -27,7 +27,7 @@ public class TrainDelayTheGame {
         ArrayList<APIEndpoint> endpointsGet = new ArrayList<>();
         endpointsGet.add(new GetActiveCurses());
         endpointsGet.add(new GetActiveQuestion());
-        endpointsGet.add(new GetAllGames());
+        endpointsGet.add(new GetAllGames(this));
         endpointsGet.add(new GetCardInventory());
         endpointsGet.add(new GetGameSettings());
         endpointsGet.add(new GetPlayerTime());
@@ -49,12 +49,13 @@ public class TrainDelayTheGame {
 
         ArrayList<APIEndpoint> endpointsPost = new ArrayList<>();
         endpointsPost.add(new AnswerQuestion());
-        endpointsPost.add(new CreateGame());
+        endpointsPost.add(new CreateGame(this));
         endpointsPost.add(new EndGame());
-        endpointsPost.add(new JoinGame());
+        endpointsPost.add(new JoinGame(this));
         endpointsPost.add(new Send());
         endpointsPost.add(new SetSettings());
         endpointsPost.add(new AddGameMap(this));
+        endpointsPost.add(new CreateUser(this));
 
         ArrayList<APIEndpoint> endpointsDelete = new ArrayList<>();
         endpointsDelete.add(new RemoveGameMap(this));

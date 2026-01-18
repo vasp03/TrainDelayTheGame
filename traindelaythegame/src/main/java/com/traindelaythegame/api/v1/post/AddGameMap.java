@@ -47,7 +47,13 @@ public class AddGameMap extends APIEndpoint {
             polygonPoints[i] = new Cords(x, y);
         }
 
-        db.addGameMap(name, polygonPoints);
+        try {
+            db.addGameMap(name, polygonPoints);
+        } catch (Exception e) {
+            ctx.status(500);
+            ctx.json("Failed to add game map: " + e.getMessage());
+            return;
+        }
 
         ctx.status(200);
     }

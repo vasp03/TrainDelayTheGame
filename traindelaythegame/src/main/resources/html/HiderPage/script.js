@@ -1,19 +1,7 @@
-function toggleDarkMode() {
-	document.cookie = "darkmode=" + (getDarkMode() ? "false" : "true") + "; path=/";
-
-	location.reload();
-}
-
-function getDarkMode() {
-	return (
-		document.cookie
-			.split("; ")
-			.find((row) => row.startsWith("darkmode="))
-			?.split("=")[1] === "true"
-	);
-}
-
 var map = L.map("map");
+
+var playArea = null;
+var invertedPlayArea = null;
 
 var darkMode =
 	document.cookie
@@ -56,8 +44,23 @@ map.on("click", function (e) {
 	console.log("Map clicked at lat: " + e.latlng.lat + "," + e.latlng.lng + ";");
 });
 
+function toggleDarkMode() {
+	document.cookie = "darkmode=" + (getDarkMode() ? "false" : "true") + "; path=/";
+
+	location.reload();
+}
+
+function getDarkMode() {
+	return (
+		document.cookie
+			.split("; ")
+			.find((row) => row.startsWith("darkmode="))
+			?.split("=")[1] === "true"
+	);
+}
+
 function getPublicTransportStopsInView() {
-	if (map.getZoom() >= 14) {
+	if (map.getZoom() >= 12) {
 		minLong = map.getBounds().getWest();
 		minLat = map.getBounds().getSouth();
 		maxLong = map.getBounds().getEast();
@@ -73,7 +76,11 @@ function getPublicTransportStopsInView() {
 			.then((response) => response.json())
 			.then((data) => {
 				data.forEach((stop) => {
-					L.marker([stop.latitude, stop.longitude]).addTo(map).bindPopup(`<b>${stop.name}</b><br>Type: ${stop.type}`);
+					var marker = L.marker([stop.latitude, stop.longitude]);
+
+					if (playArea && playArea.contains(marker.getLatLng())) {
+						marker.addTo(map).bindPopup(`<b>${stop.name}</b><br>Type: ${stop.type}`);
+					}
 				});
 			});
 	} else {
@@ -84,6 +91,72 @@ function getPublicTransportStopsInView() {
 		});
 	}
 }
+
+function getMapPolygonFromServer() {
+	var mapChoose = new URLSearchParams(window.location.search).get("map");
+
+	if (!mapChoose) {
+		alert("No map selected!");
+		return;
+	}
+
+	fetch(`/api/v1/playarea?map=${encodeURIComponent(mapChoose)}`)
+		.then((response) => response.text())
+		.then((data) => {
+			if (!data) {
+				alert("The selected map does not exist!");
+				return;
+			}
+
+			const points = data.split(";").map((point) => {
+				const [lat, lon] = point.split(",");
+				return [parseFloat(lat), parseFloat(lon)];
+			});
+
+			var world = [
+				[-90, -180],
+				[90, -180],
+				[90, 180],
+				[-90, 180],
+			];
+
+			invertedPlayArea = L.polygon([world, points], {
+				color: "red",
+				fillColor: "red",
+				fillOpacity: 0.1,
+			}).addTo(map);
+
+			playArea = L.polygon(points, {
+				color: "none",
+				fillColor: "black",
+				fillOpacity: 0,
+			}).addTo(map);
+		});
+}
+
+function getPlayerId() {
+	// Get player ID from cookie
+	const cookies = document.cookie.split("; ").reduce((acc, cookie) => {
+		const [name, value] = cookie.split("=");
+		acc[name] = value;
+		return acc;
+	}, {});
+
+	return cookies.playerid || null;
+}
+
+document.getElementById("raiseLowerFooterButton").onclick = function () {
+	const footer = document.getElementById("footer");
+	if (footer.style.height === "4vh") {
+		document.getElementById("arrowUpDown").innerText = "▼";
+		footer.style.transition = "height 0.3s ease";
+		footer.style.height = "25vh";
+	} else {
+		document.getElementById("arrowUpDown").innerText = "▲";
+		footer.style.transition = "height 0.3s ease";
+		footer.style.height = "4vh";
+	}
+};
 
 window.onload = function () {
 	const cookies = document.cookie.split("; ").reduce((acc, cookie) => {
@@ -97,43 +170,4 @@ window.onload = function () {
 	}
 
 	getMapPolygonFromServer();
-};
-
-function getMapPolygonFromServer() {
-	fetch("/api/v1/playarea?map=test")
-		.then((response) => response.text())
-		.then((data) => {
-			const points = data.split(";").map((point) => {
-				const [lat, lon] = point.split(",");
-				return [parseFloat(lat), parseFloat(lon)];
-			});
-
-			var world = [
-				[-90, -180],
-				[90, -180],
-				[90, 180],
-				[-90, 180],
-			];
-
-			L.polygon([world, points], {
-				color: "red",
-				fillColor: "red",
-				fillOpacity: 0.1,
-			}).addTo(map);
-		});
-}
-
-document.getElementById("raiseLowerFooterButton").onclick = function () {
-	const footer = document.getElementById("footer");
-	if (footer.style.height === "4vh") {
-		document.getElementById("arrowUpDown").innerText = "▼";
-		footer.style.transition = "height 0.3s ease";
-		footer.style.height = "25vh";
-		document.getElementById("footerContent").style.display = "flex";
-	} else {
-		document.getElementById("arrowUpDown").innerText = "▲";
-		footer.style.transition = "height 0.3s ease";
-		footer.style.height = "4vh";
-		document.getElementById("footerContent").style.display = "none";
-	}
 };

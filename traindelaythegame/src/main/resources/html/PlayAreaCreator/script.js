@@ -10,8 +10,12 @@ function getAllMaps() {
 			gameMapList.innerHTML = "";
 
 			data.forEach((gameMap) => {
-				var listItem = document.createElement("button");
-				listItem.onclick = () => {
+				var div = document.createElement("div");
+
+				var getButton = document.createElement("button");
+				var deleteButton = document.createElement("button");
+
+				getButton.onclick = () => {
 					map.eachLayer(function (layer) {
 						if (layer instanceof L.Polygon) {
 							map.removeLayer(layer);
@@ -19,8 +23,21 @@ function getAllMaps() {
 					});
 					getSelectedMapsPolygons(gameMap.name);
 				};
-				listItem.innerText = `Name: ${gameMap.name}`;
-				gameMapList.appendChild(listItem);
+
+				deleteButton.onclick = () => {
+					deleteMap(gameMap.name);
+				};
+
+				getButton.innerText = "Get " + gameMap.name;
+				getButton.className = "mapButton";
+
+				deleteButton.innerText = "Delete " + gameMap.name;
+				deleteButton.className = "mapButton";
+
+				div.appendChild(getButton);
+				div.appendChild(deleteButton);
+
+				gameMapList.appendChild(div);
 			});
 		})
 		.catch((error) => console.error("Error fetching maps:", error));
@@ -63,8 +80,6 @@ function createMap() {
 		cordString += cordListArray[i][0] + "," + cordListArray[i][1] + ";";
 	}
 
-	console.log("cordString:", cordString);
-
 	// Remove trailing semicolon
 	if (cordString.endsWith(";")) {
 		cordString = cordString.slice(0, -1);
@@ -84,14 +99,13 @@ function createMap() {
 	})
 		.then((response) => {
 			if (response.ok) {
-				alert("Map created successfully!");
 				resetCords();
 				document.getElementById("mapNameInput").value = "";
 			} else {
 				alert("Error creating map");
 			}
 
-            getAllMaps();
+			getAllMaps();
 		})
 		.catch((error) => {
 			console.error("Error:", error);
@@ -99,38 +113,36 @@ function createMap() {
 		});
 }
 
-function deleteMap() {}
-
-function getDarkMode() {
-	return (
-		document.cookie
-			.split("; ")
-			.find((row) => row.startsWith("darkmode="))
-			?.split("=")[1] === "true"
-	);
+function deleteMap(name) {
+	fetch(`/api/v1/gamemap?name=${encodeURIComponent(name)}`, {
+		method: "DELETE",
+	})
+		.then((response) => {
+			if (response.ok) {
+				getAllMaps();
+			} else {
+				alert("Error deleting map");
+			}
+		})
+		.catch((error) => {
+			console.error("Error:", error);
+			alert("Error deleting map.");
+		});
+	resetCords();
 }
 
 var addCords = false;
 
 var cordListArray = [];
 
-var darkMode = getDarkMode();
+var Stadia_AlidadeSmooth = L.tileLayer("https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.{ext}", {
+	minZoom: 0,
+	maxZoom: 20,
+	attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	ext: "png",
+}).addTo(map);
 
-if (darkMode) {
-	var Stadia_AlidadeSmoothDark = L.tileLayer("https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.{ext}", {
-		minZoom: 0,
-		maxZoom: 20,
-		attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-		ext: "png",
-	}).addTo(map);
-} else {
-	var Stadia_AlidadeSmooth = L.tileLayer("https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.{ext}", {
-		minZoom: 0,
-		maxZoom: 20,
-		attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-		ext: "png",
-	}).addTo(map);
-}
+var areaPolygon;
 
 map.on("move", function () {
 	const center = map.getCenter();
@@ -138,8 +150,6 @@ map.on("move", function () {
 	document.cookie = `maplon=${center.lng}; path=/`;
 	document.cookie = `mapzoom=${map.getZoom()}; path=/`;
 });
-
-var areaPolygon;
 
 map.on("click", function (e) {
 	if (!addCords) return;
@@ -160,6 +170,14 @@ map.on("click", function (e) {
 	}
 });
 
+map.on("zoomend", function (e) {
+	getPublicTransportStopsInView();
+});
+
+map.on("moveend", function (e) {
+	getPublicTransportStopsInView();
+});
+
 function resetCords() {
 	cordListArray = [];
 	document.getElementById("cordsList").innerHTML = "";
@@ -171,6 +189,35 @@ function resetCords() {
 			map.removeLayer(layer);
 		}
 	});
+}
+
+function getPublicTransportStopsInView() {
+	if (map.getZoom() >= 12) {
+		minLong = map.getBounds().getWest();
+		minLat = map.getBounds().getSouth();
+		maxLong = map.getBounds().getEast();
+		maxLat = map.getBounds().getNorth();
+
+		map.eachLayer(function (layer) {
+			if (layer instanceof L.Marker) {
+				map.removeLayer(layer);
+			}
+		});
+
+		fetch(`/api/v1/stops?minLatitude=${Math.min(minLat, maxLat)}&maxLatitude=${Math.max(minLat, maxLat)}&minLongitude=${Math.min(minLong, maxLong)}&maxLongitude=${Math.max(minLong, maxLong)}`)
+			.then((response) => response.json())
+			.then((data) => {
+				data.forEach((stop) => {
+					L.marker([stop.latitude, stop.longitude]).addTo(map).bindPopup(`<b>${stop.name}</b><br>Type: ${stop.type}`);
+				});
+			});
+	} else {
+		map.eachLayer(function (layer) {
+			if (layer instanceof L.Marker) {
+				map.removeLayer(layer);
+			}
+		});
+	}
 }
 
 function toggleAddCords() {
@@ -188,6 +235,8 @@ window.onload = () => {
 
 	if (cookies.maplat && cookies.maplon && cookies.mapzoom) {
 		map.setView([parseFloat(cookies.maplat), parseFloat(cookies.maplon)], parseInt(cookies.mapzoom));
+	} else {
+		map.setView([0, 0], 2);
 	}
 
 	getAllMaps();

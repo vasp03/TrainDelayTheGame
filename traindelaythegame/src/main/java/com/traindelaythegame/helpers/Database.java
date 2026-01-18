@@ -2,6 +2,7 @@ package com.traindelaythegame.helpers;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -9,13 +10,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.traindelaythegame.models.Cords;
+import com.traindelaythegame.models.Game;
 import com.traindelaythegame.models.MapData;
 
 public class Database {
@@ -39,11 +40,11 @@ public class Database {
     }
 
     private void createAllTables() {
-        // createPlayerTable();
+        createPlayerTable();
         // createActiveQuestionTable();
         // createActiveCursesTable();
         // createCardInventoryTable();
-        // createGameTable();
+        createGameTable();
         // createPlayerHideTimeHistoryTable();
         creatGameMapTable();
         createMapPolygonElement();
@@ -51,7 +52,21 @@ public class Database {
     }
 
     private void createPlayerTable() {
-        throw new UnsupportedOperationException("Unimplemented method 'createPlayerTable'");
+        String sql = "CREATE TABLE IF NOT EXISTS Player (\n"
+                + "	id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                + "	username TEXT NOT NULL UNIQUE,\n"
+                + " startTime LONG,\n"
+                + "	currentGame INTEGER,\n"
+                + "	isHider BOOLEAN NOT NULL,\n"
+                + "	FOREIGN KEY (currentGame) REFERENCES Game(id)\n"
+                + ");";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Failed to create Player table!");
+        }
     }
 
     private void createActiveQuestionTable() {
@@ -67,7 +82,19 @@ public class Database {
     }
 
     private void createGameTable() {
-        throw new UnsupportedOperationException("Unimplemented method 'createGameTable'");
+        String sql = "CREATE TABLE IF NOT EXISTS Game (\n"
+                + "	id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                + " isActive BOOLEAN NOT NULL,\n"
+                + "	gameMap TEXT,\n"
+                + "	gameName TEXT\n"
+                + ");";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Failed to create Game table!");
+        }
     }
 
     private void createPlayerHideTimeHistoryTable() {
@@ -241,45 +268,35 @@ public class Database {
      * @param name
      * @param polygonPoints
      */
-    public void addGameMap(String name, Cords[] polygonPoints) {
+    public void addGameMap(String name, Cords[] polygonPoints) throws SQLException {
         String sql = "INSERT INTO GameMap(name) VALUES(?)";
         int gameMapId = -1;
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setString(1, name);
-            pstmt.executeUpdate();
+        PreparedStatement pstmt = connection.prepareStatement(sql);
+        pstmt.setString(1, name);
+        pstmt.executeUpdate();
 
-            ResultSet rs = pstmt.getGeneratedKeys();
-            if (rs.next()) {
-                gameMapId = rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Failed to add game map: " + name);
-            return;
+        ResultSet rs = pstmt.getGeneratedKeys();
+        if (rs.next()) {
+            gameMapId = rs.getInt(1);
         }
 
         if (gameMapId != -1) {
             sql = "INSERT INTO MapPolygonElement(gameMapId, lat, lon) VALUES(?, ?, ?)";
 
-            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                connection.setAutoCommit(false);
+            pstmt = connection.prepareStatement(sql);
+            connection.setAutoCommit(false);
 
-                for (Cords point : polygonPoints) {
-                    pstmt.setInt(1, gameMapId);
-                    pstmt.setDouble(2, point.getLat());
-                    pstmt.setDouble(3, point.getLon());
-                    pstmt.addBatch();
-                }
-
-                pstmt.executeBatch();
-                connection.commit();
-                connection.setAutoCommit(true);
-            } catch (SQLException e) {
-                e.printStackTrace();
-                System.out.println("Failed to add polygon points for game map: " + name);
-                return;
+            for (Cords point : polygonPoints) {
+                pstmt.setInt(1, gameMapId);
+                pstmt.setDouble(2, point.getLat());
+                pstmt.setDouble(3, point.getLon());
+                pstmt.addBatch();
             }
+
+            pstmt.executeBatch();
+            connection.commit();
+            connection.setAutoCommit(true);
         }
     }
 
@@ -338,23 +355,28 @@ public class Database {
      * 
      * @param id
      */
-    public void removeGameMap(String id) {
-        String deleteGameMap = "DELETE FROM GameMap WHERE id = ?";
-        String deletePolygonPoints = "DELETE FROM MapPolygonElement WHERE gameMapId = ?";
+    public void removeGameMap(String name) {
+        String deleteGameMap = "DELETE FROM GameMap WHERE name = ?";
+        String deletePolygonPoints = "DELETE FROM MapPolygonElement WHERE gameMapId = (SELECT id FROM GameMap WHERE name = ?)";
 
         try (PreparedStatement pstmt1 = connection.prepareStatement(deletePolygonPoints);
                 PreparedStatement pstmt2 = connection.prepareStatement(deleteGameMap)) {
-            pstmt1.setString(1, id);
+            pstmt1.setString(1, name);
             pstmt1.executeUpdate();
 
-            pstmt2.setString(1, id);
+            pstmt2.setString(1, name);
             pstmt2.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("Failed to remove game map with id: " + id);
+            System.out.println("Failed to remove game map with name: " + name);
         }
     }
 
+    /**
+     * Get all game maps from the database
+     * 
+     * @return MapData[]
+     */
     public MapData[] getAllGameMaps() {
         String sql = "SELECT * FROM GameMap";
         ArrayList<MapData> gameMaps = new ArrayList<>();
@@ -374,5 +396,128 @@ public class Database {
         }
 
         return gameMaps.toArray(new MapData[0]);
+    }
+
+    /**
+     * Get all games from the database
+     * 
+     * @return Game[]
+     */
+    public Game[] getAllGames() {
+        String sql = "SELECT * FROM Game";
+        ArrayList<Game> games = new ArrayList<>();
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                games.add(new Game(
+                        rs.getInt("id"),
+                        rs.getBoolean("isActive"),
+                        rs.getString("gameMap"),
+                        rs.getString("gameName")));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Failed to get all game maps");
+            return null;
+        }
+
+        return games.toArray(new Game[0]);
+    }
+
+    /**
+     * Create a new game in the database
+     * 
+     * @param gameName
+     * @param gameMap
+     * @param b
+     * @param i
+     */
+    public int createGame() {
+        String sql = "INSERT INTO Game(gameName, gameMap, isActive) VALUES(?, ?, ?)";
+        String gameName = "Game: " + System.currentTimeMillis() / (1000 * 60);
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, gameName);
+            pstmt.setString(2, null);
+            pstmt.setBoolean(3, false);
+            pstmt.executeUpdate();
+
+            ResultSet rs = pstmt.getGeneratedKeys();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return -1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Failed to create game: " + gameName);
+            return -1;
+        }
+    }
+
+    /**
+     * Add a player to a game
+     * 
+     * @param gameId
+     * @param username
+     * @return playerId
+     */
+    public int createPlayer(String username) {
+        String selectSql = "SELECT id FROM Player WHERE username = ?";
+        try (PreparedStatement selectStmt = connection.prepareStatement(selectSql)) {
+            selectStmt.setString(1, username);
+            ResultSet rs = selectStmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Failed to check for existing player");
+            return -1;
+        }
+
+        String sql = "INSERT INTO Player(username, startTime, currentGame, isHider) VALUES(?, ?, ?, ?)";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            pstmt.setLong(2, -1);
+            pstmt.setInt(3, -1);
+            pstmt.setBoolean(4, false);
+            pstmt.executeUpdate();
+
+            ResultSet rs = pstmt.getGeneratedKeys();
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+
+            return -1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Failed to add player");
+            return -1;
+        }
+    }
+
+    public int addPlayerToGame(int gameId, int userId) {
+        if (userId == -1 || gameId == -1) {
+            return -1;
+        }
+
+        String sql = "UPDATE Player SET currentGame = ? WHERE id = ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, gameId);
+            pstmt.setInt(2, userId);
+            pstmt.executeUpdate();
+
+            return userId;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Failed to add player to game: " + gameId);
+            return -1;
+        }
     }
 }
