@@ -1,4 +1,4 @@
-package com.traindelaythegame.api.v1.get.game;
+package com.traindelaythegame.api.v1.get;
 
 import com.traindelaythegame.TrainDelayTheGame;
 import com.traindelaythegame.models.APIEndpoint;

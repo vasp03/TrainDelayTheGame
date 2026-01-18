@@ -1,19 +1,17 @@
-package com.traindelaythegame.api.v1.get.html;
+package com.traindelaythegame.api.v1.get.HTML;
 
 import com.traindelaythegame.helpers.HTMLServe;
 import com.traindelaythegame.models.APIEndpoint;
 
-import io.javalin.http.Context;
-
-public class GetAskQuestion extends APIEndpoint {
+public class MapPlay extends APIEndpoint {
     @Override
     public String path() {
-        return "/questions";
+        return "/map";
     }
 
     @Override
-    public void handle(Context ctx) throws UnsupportedOperationException {
-        String landingPage = HTMLServe.getPage("AskQuestion");
+    public void handle(io.javalin.http.Context ctx) throws UnsupportedOperationException {
+        String landingPage = HTMLServe.getPage("MapPlay");
 
         if (landingPage == null) {
             ctx.status(500).result("Error loading landing page");
@@ -22,4 +20,5 @@ public class GetAskQuestion extends APIEndpoint {
 
         ctx.contentType("text/html").result(landingPage);
     }
+
 }

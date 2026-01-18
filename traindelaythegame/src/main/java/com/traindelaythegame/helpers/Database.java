@@ -16,13 +16,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.traindelaythegame.models.Cords;
-import com.traindelaythegame.models.Game;
 import com.traindelaythegame.models.MapData;
 
 public class Database {
     Gson gson = new Gson();
-
-    // TODO: Add interrupts and queue to handle database operations asynchronously
 
     private Connection connection = null;
 
@@ -40,65 +37,9 @@ public class Database {
     }
 
     private void createAllTables() {
-        createPlayerTable();
-        // createActiveQuestionTable();
-        // createActiveCursesTable();
-        // createCardInventoryTable();
-        createGameTable();
-        // createPlayerHideTimeHistoryTable();
         creatGameMapTable();
         createMapPolygonElement();
         createPublicTransportStopsTable();
-    }
-
-    private void createPlayerTable() {
-        String sql = "CREATE TABLE IF NOT EXISTS Player (\n"
-                + "	id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-                + "	username TEXT NOT NULL UNIQUE,\n"
-                + " startTime LONG,\n"
-                + "	currentGame INTEGER,\n"
-                + "	isHider BOOLEAN NOT NULL,\n"
-                + "	FOREIGN KEY (currentGame) REFERENCES Game(id)\n"
-                + ");";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.execute();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Failed to create Player table!");
-        }
-    }
-
-    private void createActiveQuestionTable() {
-        throw new UnsupportedOperationException("Unimplemented method 'createActiveQuestionTable'");
-    }
-
-    private void createActiveCursesTable() {
-        throw new UnsupportedOperationException("Unimplemented method 'createActiveCursesTable'");
-    }
-
-    private void createCardInventoryTable() {
-        throw new UnsupportedOperationException("Unimplemented method 'createCardInventoryTable'");
-    }
-
-    private void createGameTable() {
-        String sql = "CREATE TABLE IF NOT EXISTS Game (\n"
-                + "	id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-                + " isActive BOOLEAN NOT NULL,\n"
-                + "	gameMap TEXT,\n"
-                + "	gameName TEXT\n"
-                + ");";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.execute();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Failed to create Game table!");
-        }
-    }
-
-    private void createPlayerHideTimeHistoryTable() {
-        throw new UnsupportedOperationException("Unimplemented method 'createPlayerHideTimeHistoryTable'");
     }
 
     private void creatGameMapTable() {
@@ -306,12 +247,12 @@ public class Database {
      * @param name
      * @return
      */
-    public Cords[] getGameMap(String name) {
-        String getMapSql = "SELECT * FROM GameMap WHERE name = ?";
+    public Cords[] getGameMap(String id) {
+        String getMapSql = "SELECT * FROM GameMap WHERE id = ?";
         int gameMapId = -1;
 
         try (PreparedStatement pstmt = connection.prepareStatement(getMapSql)) {
-            pstmt.setString(1, name);
+            pstmt.setString(1, id);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
@@ -319,7 +260,7 @@ public class Database {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("Failed to get game map: " + name);
+            System.out.println("Failed to get game map: " + id);
             return null;
         }
 
@@ -343,7 +284,7 @@ public class Database {
             polygonPoints = pointsList.toArray(new Cords[0]);
         } catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("Failed to get polygon points for game map: " + name);
+            System.out.println("Failed to get polygon points for game map: " + id);
             return null;
         }
 
@@ -396,128 +337,5 @@ public class Database {
         }
 
         return gameMaps.toArray(new MapData[0]);
-    }
-
-    /**
-     * Get all games from the database
-     * 
-     * @return Game[]
-     */
-    public Game[] getAllGames() {
-        String sql = "SELECT * FROM Game";
-        ArrayList<Game> games = new ArrayList<>();
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            ResultSet rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                games.add(new Game(
-                        rs.getInt("id"),
-                        rs.getBoolean("isActive"),
-                        rs.getString("gameMap"),
-                        rs.getString("gameName")));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Failed to get all game maps");
-            return null;
-        }
-
-        return games.toArray(new Game[0]);
-    }
-
-    /**
-     * Create a new game in the database
-     * 
-     * @param gameName
-     * @param gameMap
-     * @param b
-     * @param i
-     */
-    public int createGame() {
-        String sql = "INSERT INTO Game(gameName, gameMap, isActive) VALUES(?, ?, ?)";
-        String gameName = "Game: " + System.currentTimeMillis() / (1000 * 60);
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setString(1, gameName);
-            pstmt.setString(2, null);
-            pstmt.setBoolean(3, false);
-            pstmt.executeUpdate();
-
-            ResultSet rs = pstmt.getGeneratedKeys();
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-            return -1;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Failed to create game: " + gameName);
-            return -1;
-        }
-    }
-
-    /**
-     * Add a player to a game
-     * 
-     * @param gameId
-     * @param username
-     * @return playerId
-     */
-    public int createPlayer(String username) {
-        String selectSql = "SELECT id FROM Player WHERE username = ?";
-        try (PreparedStatement selectStmt = connection.prepareStatement(selectSql)) {
-            selectStmt.setString(1, username);
-            ResultSet rs = selectStmt.executeQuery();
-            
-            if (rs.next()) {
-                return rs.getInt("id");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Failed to check for existing player");
-            return -1;
-        }
-
-        String sql = "INSERT INTO Player(username, startTime, currentGame, isHider) VALUES(?, ?, ?, ?)";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setString(1, username);
-            pstmt.setLong(2, -1);
-            pstmt.setInt(3, -1);
-            pstmt.setBoolean(4, false);
-            pstmt.executeUpdate();
-
-            ResultSet rs = pstmt.getGeneratedKeys();
-
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-
-            return -1;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Failed to add player");
-            return -1;
-        }
-    }
-
-    public int addPlayerToGame(int gameId, int userId) {
-        if (userId == -1 || gameId == -1) {
-            return -1;
-        }
-
-        String sql = "UPDATE Player SET currentGame = ? WHERE id = ?";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setInt(1, gameId);
-            pstmt.setInt(2, userId);
-            pstmt.executeUpdate();
-
-            return userId;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Failed to add player to game: " + gameId);
-            return -1;
-        }
     }
 }

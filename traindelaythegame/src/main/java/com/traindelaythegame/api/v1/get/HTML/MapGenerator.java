@@ -1,19 +1,17 @@
-package com.traindelaythegame.api.v1.get.html;
+package com.traindelaythegame.api.v1.get.HTML;
 
 import com.traindelaythegame.helpers.HTMLServe;
 import com.traindelaythegame.models.APIEndpoint;
 
-import io.javalin.http.Context;
-
-public class GetHiderMainPage extends APIEndpoint {
+public class MapGenerator extends APIEndpoint {
     @Override
     public String path() {
-        return "/hider";
+        return "/";
     }
 
     @Override
-    public void handle(Context ctx) throws UnsupportedOperationException {
-        String landingPage = HTMLServe.getPage("HiderPage");
+    public void handle(io.javalin.http.Context ctx) throws UnsupportedOperationException {
+        String landingPage = HTMLServe.getPage("Map");
 
         if (landingPage == null) {
             ctx.status(500).result("Error loading landing page");

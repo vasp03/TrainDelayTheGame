@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Movie Search</title>
+
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+		<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+		<script src="https://cdn.rawgit.com/hayeswise/Leaflet.PointInPolygon/v1.0.0/wise-leaflet-pip.js"></script>
+		<script src="https://kit.fontawesome.com/98552b13b9.js" crossorigin="anonymous"></script>
+
+		<!-- INLINE_CSS -->
+	</head>
+	<body>
+		<main>
+			<div id="map"></div>
+
+			<button id="deleteButton" onclick="toggleDelete()">
+				<i class="fa-solid fa-trash"></i>
+			</button>
+
+			<button id="lowerTools" onclick="lowerTools()">
+				<i class="fa-solid fa-arrow-up" id="up" style="display:none;"></i>
+				<i class="fa-solid fa-arrow-down" id="down"></i>
+			</button>
+
+			<div id="items">
+				<div id="col1">
+					<button class="customButton" onclick="addSquare()">Add Square</button>
+					<input type="number" id="circleRadius" placeholder="Radius" />
+					<button class="customButton" onclick="addCircle()">Add Circle</button>
+				</div>
+				<div id="col2">
+					<button id="toggleStopButton" class="customButton" onClick="toggleAlwaysShowStops();">Stations Always Visible</button>
+					<button id="toggleShowOutsideStopsButton" class="customButton" onClick="toggleShowStopsOutsidePlayArea();">Show Stations Outside Play Area</button>
+				</div>
+				<div id="col3">
+					<button id="getCordsMarker" class="customButton" onclick="toggleCoordinatesMarker()">Toggle Coordinate Marker</button>
+					<div id="coordsOutputs">
+						<input type="text" disabled id="coordsOutputLat" placeholder="Lat: 0.0"></input>
+						<input type="text" disabled id="coordsOutputLon" placeholder="Lon: 0.0"/></input>
+					</div>
+				</div>
+			</div>
+		</main>
+		<!-- INLINE_JS -->
+	</body>
+</html>

@@ -1,4 +1,4 @@
-package com.traindelaythegame.api.v1.get.other;
+package com.traindelaythegame.api.v1.get;
 
 import java.io.InputStream;
 

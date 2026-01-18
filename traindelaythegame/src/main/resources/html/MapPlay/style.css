@@ -1,0 +1,146 @@
+:root {
+	--white: #f0f0f0;
+	--blue: #202f40;
+	--yellow: #ffbf40;
+	--orange: #f57a3c;
+	--red: #eb3539;
+	--black: #121212;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+}
+
+main {
+	display: flex;
+	flex-direction: row;
+	height: 100vh;
+	width: 100vw;
+}
+
+#map {
+	width: 100%;
+	height: 100%;
+	border: none;
+	margin: 0px;
+	padding: 0px;
+}
+
+#deleteButton {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	z-index: 1000;
+	width: 50px;
+	height: 50px;
+	border: none;
+	border-radius: 25px;
+	background-color: var(--white);
+	color: var(--black);
+	font-size: 1.5em;
+	cursor: pointer;
+	box-shadow: 0 2px 5px var(--black);
+	border: 3px solid var(--black);
+	border-radius: 10px;
+}
+
+#lowerTools {
+	height: calc(7vh - 21px);
+	width: calc(7vh - 21px);
+	margin: 10px;
+	font-size: 1.5em;
+	cursor: pointer;
+	border: none;
+	border: 3px solid var(--black);
+	border-radius: 10px;
+	background-color: var(--white);
+	box-shadow: 0 2px 5px var(--black);
+	align-self: flex-end;
+	position: absolute;
+	bottom: calc(30vh + 10px);
+	right: 10px;
+	z-index: 1001;
+}
+
+#items {
+	flex-direction: row;
+	align-items: center;
+	display: flex;
+	position: absolute;
+	bottom: 0;
+	height: 30vh;
+	width: 100vw;
+	z-index: 1000;
+	background-color: var(--white);
+	border-top: 3px solid var(--black);
+	box-shadow: 0 -2px 20px var(--black);
+}
+
+@media (min-width: 1100px) {
+	#items {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		width: 100vw;
+	}
+
+	#items > div {
+		border: 3px solid var(--black);
+		margin: 10px;
+		flex: 1;
+		width: calc(100% / 3);
+	}
+}
+
+@media (min-width: 250px) and (max-width: 1100px) {
+	#items {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 100vw;
+		overflow-y: auto;
+	}
+}
+
+@media (max-width: 250px) {
+	#items {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 100vw;
+		overflow-y: auto;
+		overflow-x: hidden;
+		flex-wrap: nowrap;
+	}
+}
+
+input {
+	margin: 10px;
+	align-self: center;
+	flex-grow: 1;
+	height: calc(7vh - 20px);
+	font-size: 1.2em;
+	border: 3px solid var(--black);
+	border-radius: 10px;
+	padding: 5px;
+	box-shadow: 0 2px 5px var(--black);
+	box-sizing: border-box;
+	max-width: calc(100% - 20px);
+}
+
+.customButton {
+	width: calc(100% - 20px);
+	min-height: calc(7vh - 20px);
+	margin: 10px;
+	font-size: 1.5em;
+	cursor: pointer;
+	border-radius: 10px;
+	border: 3px solid var(--black);
+	background-color: var(--white);
+	box-shadow: 0 2px 5px var(--black);
+}
+
+div > input {
+	min-width: calc(100% - 20px);
+}

@@ -21,7 +21,8 @@ function getAllMaps() {
 							map.removeLayer(layer);
 						}
 					});
-					getSelectedMapsPolygons(gameMap.name);
+
+					window.location.href = `map?id=${encodeURIComponent(gameMap.id)}`;
 				};
 
 				deleteButton.onclick = () => {
