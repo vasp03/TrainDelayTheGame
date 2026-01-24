@@ -1,6 +1,19 @@
+:root {
+	--white: #f0f0f0;
+	--blue: #202f40;
+	--yellow: #ffbf40;
+	--orange: #f57a3c;
+	--red: #eb3539;
+	--black: #121212;
+	--footer-height: 30vh;
+	--third-width: calc(100% / 3);
+}
+
 body {
 	margin: 0;
 	padding: 0;
+
+	font-family: Arial, sans-serif;
 }
 
 main {
@@ -17,6 +30,14 @@ main {
 #right {
 	flex: 1;
 	background-color: #ffffff;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	overflow-y: scroll;
+	overflow-x: hidden;
+
+	border-left: 3px solid var(--black);
 }
 
 #map {
@@ -28,17 +49,65 @@ main {
 }
 
 button {
-    width: 90%;
-    height: 40px;
-    margin: 10px;
-    font-size: 16px;
-    cursor: pointer;
+	width: 90%;
+	height: 40px;
+	margin: 10px;
+	font-size: 16px;
+	cursor: pointer;
+
+	background-color: var(--white);
+	color: var(--black);
+	border: 3px solid var(--black);
+	border-radius: 10px;
+	box-shadow: 0 2px 5px var(--black);
+}
+
+input {
+	width: calc(100% - 20px);
+	height: 30px;
+	margin: 10px;
+	font-size: 16px;
+	border: 3px solid var(--black);
+	border-radius: 10px;
+	box-shadow: 0 2px 5px var(--black);
 }
 
 .mapButton {
-	width: 45%;
-	height: 30px;
 	margin: 5px;
 	font-size: 14px;
 	cursor: pointer;
+}
+
+#cordsList {
+	flex-direction: column;
+	display: flex;
+	width: 100%;
+	overflow-y: scroll;
+}
+
+.mapItem {
+	margin: 10px;
+	width: 100%;
+}
+
+/* Place map action buttons (Get/Delete) side-by-side */
+.mapItem {
+	display: flex;
+	flex-direction: row;
+	gap: 8px;
+	align-items: center;
+	justify-content: center;
+	width: calc(100% - 20px);
+}
+
+.mapItem .mapButton {
+	width: calc(50% - 4px);
+	margin: 5px 0;
+}
+
+#gameMapsList {
+	flex-direction: column;
+	display: flex;
+	width: 100%;
+	grid-template-columns: repeat(2, 1fr);
 }
