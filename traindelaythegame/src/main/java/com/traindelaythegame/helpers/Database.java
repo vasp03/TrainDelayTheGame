@@ -10,6 +10,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -173,11 +175,11 @@ public class Database {
      * @return JsonArray of stops
      */
     public JsonArray getStopsInBoundsAsJson(double minLat, double maxLat, double minLon,
-            double maxLon) {
+            double maxLon, String exclusion) {
         List<JsonObject> stops = new ArrayList<>();
         String query = "SELECT * FROM PublicTransportStops WHERE "
                 + "latitude BETWEEN ? AND ? AND "
-                + "longitude BETWEEN ? AND ?;";
+                + "longitude BETWEEN ? AND ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setDouble(1, minLat);
@@ -188,11 +190,45 @@ public class Database {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
+                String rowType = rs.getString("type");
+
+                if (exclusion != null && !exclusion.isEmpty()) {
+                    String[] excludeTypes = exclusion.split(",");
+                    String[] haveTypes = (rowType == null) ? new String[0] : rowType.split(",");
+
+                    Set<String> excludeSet = new HashSet<>();
+                    for (String t : excludeTypes) {
+                        if (t != null && !t.trim().isEmpty()) {
+                            excludeSet.add(t.trim().toLowerCase());
+                        }
+                    }
+
+                    Set<String> haveSet = new HashSet<>();
+                    for (String t : haveTypes) {
+                        if (t != null && !t.trim().isEmpty()) {
+                            haveSet.add(t.trim().toLowerCase());
+                        }
+                    }
+
+                    // Only exclude the stop if ALL of its types are within the exclusion set.
+                    // Example: stop types = {train, bus}, exclusion = {train} -> keep the stop.
+                    boolean shouldExclude = false;
+                    if (!haveSet.isEmpty() && !excludeSet.isEmpty()) {
+                        if (excludeSet.containsAll(haveSet)) {
+                            shouldExclude = true;
+                        }
+                    }
+
+                    if (shouldExclude) {
+                        continue; // skip stops that have only excluded types
+                    }
+                }
+
                 JsonObject stop = new JsonObject();
                 stop.addProperty("name", rs.getString("name"));
                 stop.addProperty("longitude", rs.getDouble("longitude"));
                 stop.addProperty("latitude", rs.getDouble("latitude"));
-                stop.addProperty("type", rs.getString("type"));
+                stop.addProperty("type", rowType);
 
                 stops.add(stop);
             }

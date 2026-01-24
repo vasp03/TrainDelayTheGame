@@ -15,6 +15,18 @@ var radiusCircle = null;
 var stopMarkers = [];
 var customArea = [];
 
+var busStopsCheckbox = document.getElementById("busStopsCheckbox");
+var trainStopsCheckbox = document.getElementById("trainStopsCheckbox");
+var tramsStopsCheckbox = document.getElementById("tramStopsCheckbox");
+var metrosStopsCheckbox = document.getElementById("metroStopsCheckbox");
+var ferriesStopsCheckbox = document.getElementById("ferryStopsCheckbox");
+var waterStopsCheckbox = document.getElementById("waterStopsCheckbox");
+var otherStopsCheckbox = document.getElementById("otherStopsCheckbox");
+
+var gpsMarker = null;
+var gpsUpdater = null;
+var gpsToggleButton = document.getElementById("toggleGPSButton");
+
 var markerIcon = L.icon({
 	iconUrl: "img/pin.png",
 	iconSize: [40, 40], // size of the icon
@@ -94,7 +106,18 @@ function getPublicTransportStopsInView() {
 
 		stopMarkers = [];
 
-		fetch(`/api/v1/stops?minLatitude=${Math.min(minLat, maxLat)}&maxLatitude=${Math.max(minLat, maxLat)}&minLongitude=${Math.min(minLong, maxLong)}&maxLongitude=${Math.max(minLong, maxLong)}`)
+		var typesToExclude = [];
+		if (!busStopsCheckbox.checked) typesToExclude.push("bus");
+		if (!trainStopsCheckbox.checked) typesToExclude.push("rail");
+		if (!tramsStopsCheckbox.checked) typesToExclude.push("tram");
+		if (!metrosStopsCheckbox.checked) typesToExclude.push("metro");
+		if (!ferriesStopsCheckbox.checked) typesToExclude.push("ferry");
+		if (!waterStopsCheckbox.checked) typesToExclude.push("water");
+		if (!otherStopsCheckbox.checked) typesToExclude.push("other");
+
+		var excludeParam = typesToExclude.join(",");
+
+		fetch(`/api/v1/stops?minLatitude=${Math.min(minLat, maxLat)}&maxLatitude=${Math.max(minLat, maxLat)}&minLongitude=${Math.min(minLong, maxLong)}&maxLongitude=${Math.max(minLong, maxLong)}&exclude=${encodeURIComponent(excludeParam)}`)
 			.then((response) => response.json())
 			.then((data) => {
 				data.forEach((stop) => {
@@ -269,6 +292,61 @@ function addCircle() {
 	radiusMarker.on("drag", function (e) {
 		radiusCircle.setLatLng(radiusMarker.getLatLng());
 	});
+}
+
+function updateStopsVisibility() {}
+
+function toggleGPSPosition() {
+	if (gpsMarker != null) {
+		toggleGPSButton.style.backgroundColor = "white";
+		toggleGPSButton.style.color = "black";
+
+		map.removeLayer(gpsMarker);
+		gpsMarker = null;
+
+		if (gpsUpdater != null) {
+			clearInterval(gpsUpdater);
+			gpsUpdater = null;
+		}
+
+		return;
+	}
+
+	toggleGPSButton.style.backgroundColor = "green";
+	toggleGPSButton.style.color = "white";
+
+	updateGPSPosition();
+
+	gpsUpdater = setInterval(() => {
+		updateGPSPosition();
+	}, 5000); // Update every 5 seconds
+}
+
+function updateGPSPosition(position) {
+	if (navigator.geolocation) {
+		navigator.geolocation.getCurrentPosition((position) => {
+			const lat = position.coords.latitude;
+			const lon = position.coords.longitude;
+
+			console.log(`GPS Position: Lat ${lat}, Lon ${lon}`);
+
+			if (gpsMarker != null) {
+				gpsMarker.setLatLng([lat, lon]);
+			} else {
+				gpsMarker = L.marker([lat, lon], {
+					icon: L.icon({
+						iconUrl: "img/gps.png",
+						iconSize: [30, 30],
+						iconAnchor: [15, 15],
+						popupAnchor: [0, -15],
+					}),
+					riseOnHover: true,
+				})
+					.addTo(map)
+					.bindPopup("GPS Position");
+			}
+		});
+	}
 }
 
 window.onload = async () => {

@@ -2,6 +2,7 @@ package com.traindelaythegame.api.v1.delete;
 
 import com.traindelaythegame.TrainDelayTheGame;
 import com.traindelaythegame.models.APIEndpoint;
+import com.traindelaythegame.helpers.Security;
 
 import io.javalin.http.Context;
 
@@ -24,6 +25,12 @@ public class RemoveGameMap extends APIEndpoint {
         if (name == null || name.isEmpty()) {
             ctx.status(400);
             ctx.json("Missing 'name' form parameter.");
+            return;
+        }
+
+        if (!Security.isValidApiRequest(name)) {
+            ctx.status(400);
+            ctx.json("Invalid 'name' parameter.");
             return;
         }
 

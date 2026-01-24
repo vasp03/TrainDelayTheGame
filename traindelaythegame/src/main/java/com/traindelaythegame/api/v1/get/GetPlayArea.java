@@ -2,6 +2,7 @@ package com.traindelaythegame.api.v1.get;
 
 import com.traindelaythegame.TrainDelayTheGame;
 import com.traindelaythegame.models.APIEndpoint;
+import com.traindelaythegame.helpers.Security;
 import com.traindelaythegame.models.Cords;
 
 import io.javalin.http.Context;
@@ -28,6 +29,12 @@ public class GetPlayArea extends APIEndpoint {
         if (map == null || map.isEmpty()) {
             ctx.status(400);
             ctx.json("Missing 'map' path parameter.");
+            return;
+        }
+
+        if (!Security.isValidApiRequest(map)) {
+            ctx.status(400);
+            ctx.json("Invalid 'map' parameter.");
             return;
         }
 

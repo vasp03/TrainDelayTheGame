@@ -34,6 +34,15 @@
 				<div id="col2">
 					<button id="toggleStopButton" class="customButton" onClick="toggleAlwaysShowStops();">Stations Always Visible</button>
 					<button id="toggleShowOutsideStopsButton" class="customButton" onClick="toggleShowStopsOutsidePlayArea();">Show Stations Outside Play Area</button>
+					<div id="stopFilters">
+						<label><input type="checkbox" id="busStopsCheckbox" checked onchange="getPublicTransportStopsInView()" /> Bus Stops</label>
+						<label><input type="checkbox" id="trainStopsCheckbox" checked onchange="getPublicTransportStopsInView()" /> Train Stations</label>
+						<label><input type="checkbox" id="tramStopsCheckbox" checked onchange="getPublicTransportStopsInView()" /> Tram Stops</label>
+						<label><input type="checkbox" id="metroStopsCheckbox" checked onchange="getPublicTransportStopsInView()" /> Metro Stations</label>
+						<label><input type="checkbox" id="ferryStopsCheckbox" checked onchange="getPublicTransportStopsInView()" /> Ferry Stops</label>
+						<label><input type="checkbox" id="waterStopsCheckbox" checked onchange="getPublicTransportStopsInView()" /> Water Stops</label>
+						<label><input type="checkbox" id="otherStopsCheckbox" checked onchange="getPublicTransportStopsInView()" /> Other Stops</label>
+					</div>
 				</div>
 				<div id="col3">
 					<button id="getCordsMarker" class="customButton" onclick="toggleCoordinatesMarker()">Toggle Coordinate Marker</button>
@@ -41,6 +50,7 @@
 						<input type="text" disabled id="coordsOutputLat" placeholder="Lat: 0.0"></input>
 						<input type="text" disabled id="coordsOutputLon" placeholder="Lon: 0.0"/></input>
 					</div>
+					<button id="toggleGPSButton" class="customButton" onclick="toggleGPSPosition()">Toggle GPS position</button>
 				</div>
 			</div>
 		</main>

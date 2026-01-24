@@ -3,6 +3,7 @@ package com.traindelaythegame.api.v1.post;
 import com.traindelaythegame.TrainDelayTheGame;
 import com.traindelaythegame.helpers.Database;
 import com.traindelaythegame.models.APIEndpoint;
+import com.traindelaythegame.helpers.Security;
 import com.traindelaythegame.models.Cords;
 
 import io.javalin.http.Context;
@@ -30,9 +31,21 @@ public class AddGameMap extends APIEndpoint {
             return;
         }
 
+        if (!Security.isValidApiRequest(name)) {
+            ctx.status(400);
+            ctx.json("Invalid 'name' parameter.");
+            return;
+        }
+
         if (polygonPointsJson == null || polygonPointsJson.isEmpty()) {
             ctx.status(400);
             ctx.json("Missing 'polygonPoints' form parameter.");
+            return;
+        }
+
+        if (!Security.isValidNumericList(polygonPointsJson)) {
+            ctx.status(400);
+            ctx.json("Invalid 'polygonPoints' parameter.");
             return;
         }
 
@@ -42,9 +55,15 @@ public class AddGameMap extends APIEndpoint {
 
         for (int i = 0; i < pointPairs.length; i++) {
             String[] coords = pointPairs[i].split(",");
-            double x = Double.parseDouble(coords[0]);
-            double y = Double.parseDouble(coords[1]);
-            polygonPoints[i] = new Cords(x, y);
+            try {
+                double x = Double.parseDouble(coords[0]);
+                double y = Double.parseDouble(coords[1]);
+                polygonPoints[i] = new Cords(x, y);
+            } catch (Exception e) {
+                ctx.status(400);
+                ctx.json("Invalid coordinate pair: " + pointPairs[i]);
+                return;
+            }
         }
 
         try {
